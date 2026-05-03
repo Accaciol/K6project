@@ -1,0 +1,41 @@
+services:
+  oracle-db:
+    image: docker.io/gvenzl/oracle-free:latest
+    container_name: oracle-perf-test
+    environment:
+      - ORACLE_PASSWORD=minhasenha123
+      - APP_USER=teste_user
+      - APP_USER_PASSWORD=teste_pass
+    ports:
+      - "1521:1521"
+    deploy:
+      resources:
+        limits:
+          # Aumentado para garantir que o banco inicie sem erros de memória
+          cpus: '1.0'
+          memory: 2560M
+    healthcheck:
+      test: ["CMD", "healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  k6:
+    build: 
+      context: .
+      dockerfile: docker/Dockerfile
+    volumes:
+      - ./scripts:/scripts:Z
+      - ./results:/scripts/results:Z
+    environment:
+      - DB_URL=oracle://teste_user:teste_pass@oracle-db:1521/FREEPDB1
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    # O k6 vai esperar o Oracle ficar 100% saudável
+    depends_on:
+      oracle-db:
+        condition: service_healthy
+    entrypoint: /bin/sh -c "sleep 10 && k6 run /scripts/performance-test.js"
