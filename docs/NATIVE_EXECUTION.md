@@ -92,8 +92,21 @@ $env:DB_URL="oracle://admin:senha123@200.150.10.50:1521/XEPDB1"
 
 ---
 
-## 5. Pontos de Atenção para Testes Remotos
+## 6. Execução em Windows sem Privilégios de Admin (Modo Portátil)
 
-1.  **Firewall:** Verifique se a porta do Oracle (padrão 1521) está aberta no servidor remoto para o seu IP.
-2.  **Latência de Rede:** Lembre-se que o tempo medido incluirá o trajeto dos dados pela internet/VPN. Para testes de carga puros, o ideal é rodar o k6 em uma máquina na mesma rede do banco.
-3.  **VPN:** Se o banco estiver atrás de uma VPN, certifique-se de que ela está ativa na máquina que roda o k6.
+Se você estiver em uma máquina Windows onde não possui permissões de administrador para instalar o Go ou configurar variáveis de ambiente do sistema:
+
+1.  **Binário Pré-compilado:** Utilize o arquivo `k6_windows.exe` já disponível na raiz deste projeto.
+2.  **Oracle Instant Client Portátil:**
+    *   Baixe o arquivo **Instant Client "Basic Light" ZIP** no site da Oracle.
+    *   Extraia todo o conteúdo do ZIP (especialmente as arquivos `.dll` como `oci.dll`) para a **mesma pasta** onde está o `k6_windows.exe`.
+3.  **Execução:**
+    *   Abra o terminal (PowerShell ou CMD) na pasta do projeto.
+    *   O Windows carregará as DLLs da pasta local automaticamente.
+    *   Roda o comando normalmente:
+      ```powershell
+      $env:DB_URL="oracle://usuario:senha@host:1521/servico"
+      .\k6_windows.exe run scripts\performance-test.js
+      ```
+
+Este método não exige instalação nem alteração nas configurações do sistema.
